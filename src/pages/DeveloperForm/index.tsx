@@ -1,79 +1,67 @@
-import { useEffect, useState } from "react";
-import Button from "@mui/material/Button";
-import { LanguageQuestion } from "./components/LanguageQuestion";
-import { NameQuestion } from "./components/NameQuestion";
-import { RatingLanguagesQuestion } from "./components/RatingLanguagesQuestion";
-import { Language, LanguageOptions } from "./types";
+import { useEffect, useReducer, useState } from 'react'
+import Button from '@mui/material/Button'
+import { LanguageQuestion } from './components/LanguageQuestion'
+import { NameQuestion } from './components/NameQuestion'
+import { RatingLanguagesQuestion } from './components/RatingLanguagesQuestion'
+import { Language, LanguageOptions } from './types'
+import { ActionTypes, developerFormReducer } from './reducer'
 
 const languages: Language[] = [
-  { name: "JavaScript", value: "javascript" },
-  { name: "TypeScript", value: "typescript" },
-  { name: "Python", value: "python" },
-  { name: "Java", value: "java" },
-  { name: "C#", value: "csharp" },
-];
+  { name: 'JavaScript', value: 'javascript' },
+  { name: 'TypeScript', value: 'typescript' },
+  { name: 'Python', value: 'python' },
+  { name: 'Java', value: 'java' },
+  { name: 'C#', value: 'csharp' },
+]
 
 const initialValues: LanguageOptions[] = languages.map((language) => ({
   language,
   selected: false,
   rating: 0,
-}));
+}))
 
 export function DeveloperForm() {
-  const [name, setName] = useState("");
-  const [formIsCompleted, setFormIsCompleted] = useState(false);
-  const [languageOptions, setSelectedLanguages] =
-    useState<LanguageOptions[]>(initialValues);
+  const [state, dispatch] = useReducer(developerFormReducer, {
+    name: '',
+    languageOptions: initialValues,
+    formIsCompleted: false,
+  })
 
   function handleSelectedLanguage(langValue: string) {
-    const newSelectedLanguages = languageOptions.map((langOp) => {
-      if (langOp.language.value === langValue) {
-        return { ...langOp, selected: !langOp.selected, rating: 0 };
-      }
-      return langOp;
-    });
-    setSelectedLanguages(newSelectedLanguages);
+    dispatch({ type: ActionTypes.UPDATE_SELECT_LANGUAGE, payload: langValue })
   }
 
   function handleRatingLanguage(langValue: string, rating: number | null) {
-    const newSelectedLanguages = languageOptions.map((langOp) => {
-      if (langOp.language.value === langValue) {
-        return { ...langOp, rating: rating || 0 };
-      }
-      return langOp;
-    });
-    setSelectedLanguages(newSelectedLanguages);
+    dispatch({
+      type: ActionTypes.UPDATE_RATE_LANGUAGE,
+      payload: { langValue, rating },
+    })
   }
-
-  useEffect(() => {
-    const selectedLanguages = languageOptions.filter((lang) => lang.selected);
-    const allLanguagesAreRated = selectedLanguages.every(
-      (lang) => lang.rating > 0
-    );
-    setFormIsCompleted(
-      name.length > 0 && selectedLanguages.length > 0 && allLanguagesAreRated
-    );
-  }, [name, languageOptions]);
 
   return (
     <div>
-      <NameQuestion value={name} onChangeValue={setName} />
+      <NameQuestion
+        value={state.name}
+        onChangeValue={(value) =>
+          dispatch({ type: ActionTypes.UPDATE_NAME, payload: value })
+        }
+      />
       <LanguageQuestion
-        languageOptions={languageOptions}
+        languageOptions={state.languageOptions}
         onSelectedLanguage={handleSelectedLanguage}
       />
       <RatingLanguagesQuestion
-        languageOptions={languageOptions}
+        languageOptions={state.languageOptions}
         onRatingLanguage={handleRatingLanguage}
       />
       <Button
         color="success"
         size="large"
         variant="contained"
-        disabled={!formIsCompleted}
+        disabled={!state.formIsCompleted}
       >
         Enviar
       </Button>
     </div>
-  );
+  )
 }
